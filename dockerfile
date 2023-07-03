@@ -1,48 +1,32 @@
-# Stage 1: Build React frontend
-FROM node:14 as frontend-builder
+# Use the official Node.js base image from Docker Hub
+FROM node:16-alpine as base
 
+# Set the working directory in the container
 WORKDIR /app
 
-COPY frontend/package.json frontend/package-lock.json ./
+# Copy the package.json and pnpm-lock.yaml files into the container
+COPY package.json pnpm-lock.yaml ./
 
-RUN npm ci --silent
+# Install PNPM package manager globally
+RUN npm install -g pnpm
 
-COPY frontend/public ./public
-COPY frontend/src ./src
+# Install project dependencies using PNPM
+RUN pnpm install --frozen-lockfile
 
-RUN npm run build
+# Build the Next.js app
+RUN pnpm build
 
-# Stage 2: Build FastAPI backend
-FROM python:3.9 as backend-builder
+# Use the official Nginx base image from Docker Hub
+FROM nginx:alpine
 
-WORKDIR /app
+# Copy the Nginx configuration file
+COPY nginx.conf /etc/nginx/conf.d/default.conf
 
-COPY backend/requirements.txt ./
+# Copy the built application from the builder stage to the Nginx web root directory
+COPY --from=base /app/.next /usr/share/nginx/html
 
-RUN pip install --no-cache-dir -r requirements.txt
+# Expose the port that Nginx will be listening on
+EXPOSE 80
 
-COPY backend ./
-
-# Stage 3: Final image
-FROM python:3.9-slim
-
-WORKDIR /app
-
-# Install additional dependencies, if any
-# For example, if you need to install PostgreSQL client:
-# RUN apt-get update && apt-get install -y libpq-dev
-
-# Copy built React frontend from the frontend-builder stage
-COPY --from=frontend-builder /app/build ./frontend/build
-
-# Copy built FastAPI backend from the backend-builder stage
-COPY --from=backend-builder /app .
-
-# Set environment variables, if necessary
-# ENV VARIABLE_NAME value
-
-# Expose the port on which the FastAPI server will listen
-EXPOSE 8000
-
-# Start the FastAPI server
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Start Nginx
+CMD ["nginx", "-g", "daemon off;"]
