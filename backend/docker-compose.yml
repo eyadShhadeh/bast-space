@@ -1,0 +1,76 @@
+services:
+  bast-space-db:
+    image: postgres
+    container_name: bast-space-db
+    environment:
+      - PGUSER=postgres
+      - PGPASSWORD=password
+      - PGHOST=bast-space-db
+      - PGPORT=5432
+      - PGDATABASE=postgres
+      - PYTHONDONTWRITEBYTECODE=true
+      - POSTGRES_HOST_AUTH_METHOD=trust
+    ports:
+      - "5432:5432"
+    networks:
+      - eyad_default
+
+  bast-space-base:
+    volumes:
+      - ${PWD}:/app
+    build:
+      context: .
+    container_name: bast-space-base
+    ports:
+      - "8000"
+    environment:
+      - POSTGRES_DB=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_HOST_AUTH_METHOD=trust
+      - ENVIRONMENT=dev
+
+  bast-space-service:
+    extends:
+      service: bast-space-base
+    container_name: bast-space-service
+    depends_on:
+      - bast-space-db
+      - bast-space-alembic
+    # command:
+    #   [
+    #     "gunicorn",
+    #     "-c",
+    #     "gunicorn_conf.py",
+    #     "-b",
+    #     "0.0.0.0:80",
+    #     "src.main:app"
+    #   ] 
+
+  bast-space-alembic:
+    extends:
+      service: bast-space-base
+    depends_on:
+      - bast-space-db
+    container_name: bast-space-alembic
+    command: [ "alembic", "upgrade", "head" ]
+    # bast-space-tests:
+    #   container_name: bast-space-tests
+    #   extends:
+    #     service: bast-space-base
+    #   ports:
+    #     - "80:80"
+    #   command:
+    #     [
+    #       "pytest",
+    #       "-vvv",
+    #       "--cov=src",
+    #       "--cov-fail-under=90",
+    #       "--cov-config=setup.cfg",
+    #       "--cov-report",
+    #       "term-missing",
+    #       "tests"
+    #     ]
+networks:
+  eyad_default:
+    name: eyad_default

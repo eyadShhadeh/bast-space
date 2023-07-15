@@ -1,5 +1,5 @@
 start:
-	@docker-compose up tool-belt-service
+	@docker-compose up bast-space-service
 
 clean:
 	@rm -rf .coverage & rm -rf .pytest_cache & rm -rf .mypy_cache & rm -rf **/__pycache__/** || echo "All clean"
@@ -15,9 +15,9 @@ lint:
 	mypy --install-types --non-interactive src
 
 test:
-	@docker-compose run --rm tool-belt-tests flake8 --count --statistics src tests
-	@docker-compose run --rm tool-belt-tests mypy --install-types --non-interactive src
-	@docker-compose run --rm tool-belt-tests
+	@docker-compose run --rm bast-space-tests flake8 --count --statistics src tests
+	@docker-compose run --rm bast-space-tests mypy --install-types --non-interactive src
+	@docker-compose run --rm bast-space-tests
 
 start-consumer:
 	@docker-compose up subscription-event-consumer-worker
@@ -26,11 +26,11 @@ stop:
 	@docker-compose down
 
 setup-offers:
-	@docker-compose run --rm tool-belt-service-partitions
+	@docker-compose run --rm bast-space-service-partitions
 
 setup-db:
-	@docker-compose run --rm tool-belt-service-alembic
-	@docker-compose run --rm tool-belt-service-partitions
+	@docker-compose run --rm bast-space-service-alembic
+	@docker-compose run --rm bast-space-service-partitions
 
 data-patches:
 	@docker-compose run --rm subscription-data-patches
