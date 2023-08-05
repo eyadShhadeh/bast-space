@@ -1,4 +1,12 @@
 from fastapi import APIRouter
 
 
-youtube_route = APIRouter(tags="YouTube download")
+users_route = APIRouter(tags=["users"])
+
+# TODO get APIResponse model
+
+
+@users_route.get("/all-users")
+def get_users():
+
+    return

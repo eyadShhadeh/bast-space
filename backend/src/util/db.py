@@ -3,7 +3,7 @@ import uuid
 from datetime import datetime
 
 import sqlalchemy as sa
-from sqlalchemy import Boolean, Column, DateTime, Float, SmallInteger, Text, UniqueConstraint
+from sqlalchemy import Boolean, Column, DateTime, Float, SmallInteger, Text, UniqueConstraint, MetaData
 from sqlalchemy.dialects.postgresql import UUID
 
 pool_size = int(os.getenv('SQLALCHEMY_POOL_SIZE', 10))
@@ -22,8 +22,11 @@ def get_db_url():
 engine = sa.create_engine(get_db_url(), echo=False,
                           echo_pool=True, pool_size=pool_size, max_overflow=16)
 
-metadata = sa.MetaData()
-metadata.bind = engine
+metadata: MetaData = sa.MetaData()
 
 now = datetime.utcnow
 default_now = dict(default=now, server_default=sa.func.now())
+
+if __name__ == "__main__":
+    # Creating tables in the database
+    metadata.create_all(engine)
